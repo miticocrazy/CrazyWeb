@@ -1,0 +1,18 @@
+{
+  "name": "🗓️ Tracker",
+  "short_name": "Tracker",
+  "description": "App simple de seguimiento de hábitos.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5efe6",
+  "theme_color": "#0f766e",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./tracker-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

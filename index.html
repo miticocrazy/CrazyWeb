@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tracker" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link id="app-icon" rel="icon" href="./tracker-icon.svg" type="image/svg+xml" />
+  <link id="app-apple-icon" rel="apple-touch-icon" href="./tracker-icon.svg" />
+  <title>🗓️ Tracker</title>
+    <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="auth-overlay">
+    <div class="auth-box">
+      <h2>👋 Bienvenido</h2>
+      <p class="muted" style="margin-bottom:16px;">Inicia sesión para sincronizar Mac + iPhone</p>
+      <input type="email" id="email" placeholder="tu@email.com" />
+      <input type="password" id="password" placeholder="Contraseña" />
+      <button class="btn-primary" onclick="handleLogin()">Entrar / Registrarse</button>
+      <p id="auth-msg" class="note" style="margin-top:10px;"></p>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>🗓️ Tracker Online</h1>
+        <p>Tus hábitos sincronizados en todos tus dispositivos.</p>
+      </div>
+      <div class="row">
+        <span id="user-info"></span>
+        <button onclick="syncNow()">Sync</button>
+        <button onclick="handleLogout()">Salir</button>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="card metric">
+        <small>Día seleccionado</small>
+        <b id="kpi-hoy">0/0</b>
+      </div>
+      <div class="card metric">
+        <small>Consistencia 30 días</small>
+        <b id="kpi-consistency">0%</b>
+      </div>
+      <div class="card metric">
+        <small>Racha</small>
+        <b id="kpi-streak">0 días</b>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="card panel">
+        <h2 id="habit-title">Hábitos del día</h2>
+        <div id="habit-list"></div>
+        <div class="row" style="margin-top: 8px;">
+          <input id="new-habit-icon" class="habit-icon-input" type="text" placeholder="💧" maxlength="2" />
+          <input id="new-habit" type="text" placeholder="Nuevo hábito" />
+          <button class="btn-primary" onclick="addHabit()">Añadir</button>
+        </div>
+        <p id="habit-note" class="note"></p>
+
+        <div class="notes-panel">
+          <div class="row" style="justify-content:space-between;">
+            <h2 style="margin:0;">Notas del día</h2>
+            <button onclick="clearNotes()">Limpiar</button>
+          </div>
+          <p id="notes-date" class="muted" style="margin-top:6px;"></p>
+          <textarea id="day-notes" placeholder="Escribe tus notas del día..." oninput="updateNotes()"></textarea>
+          <p id="notes-note" class="note"></p>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h2>Calendario</h2>
+        <div class="calendar-bar">
+          <div class="row">
+            <button onclick="moveMonth(-1)">‹</button>
+            <button onclick="goToToday()">Hoy</button>
+            <button onclick="moveMonth(1)">›</button>
+          </div>
+          <strong id="calendar-label"></strong>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+        <p id="selected-date" class="muted" style="margin-top:8px;"></p>
+        <p class="muted" style="margin-top:8px;">Rojo = bajo, Verde = alto</p>
+        <div class="duel-mini">
+          <div class="row" style="justify-content:space-between;">
+            <h2 style="margin:0;">🥊 Duelo</h2>
+            <button onclick="refreshDuel()">Actualizar</button>
+          </div>
+          <p id="duel-alias" class="muted" style="margin-top:6px;"></p>
+          <p id="duel-month" class="muted" style="margin-top:6px;"></p>
+          <div id="duel-dominance" class="duel-dominance"></div>
+          <p id="duel-status" class="muted" style="margin-top:6px;"></p>
+          <p id="duel-combo" class="muted" style="margin-top:6px;"></p>
+          <div id="duel-event" class="duel-event"></div>
+          <div id="duel-board"></div>
+          <div id="duel-history" class="duel-history"></div>
+          <p id="duel-note" class="note"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="settings-fab" onclick="toggleSettingsPanel()" title="Ajustes">⚙️</button>
+  <div id="settings-panel" class="hidden">
+    <h3>Ajustes</h3>
+    <div class="row" style="margin-bottom:8px;">
+      <input id="settings-alias-input" type="text" placeholder="Cambiar alias" />
+      <button class="btn-primary" onclick="saveAliasFromSettings()">Guardar</button>
+    </div>
+    <div class="theme-picker">
+      <p class="muted" style="margin-bottom:6px;">Color</p>
+      <div class="theme-options">
+        <button class="theme-btn" data-theme="neutral" onclick="setTheme('neutral')">
+          <span class="theme-swatch neutral"></span>
+          Neutro
+        </button>
+        <button class="theme-btn" data-theme="rojo" onclick="setTheme('rojo')">
+          <span class="theme-swatch rojo"></span>
+          Rojizo
+        </button>
+        <button class="theme-btn" data-theme="rosa" onclick="setTheme('rosa')">
+          <span class="theme-swatch rosa"></span>
+          Rosa
+        </button>
+      </div>
+    </div>
+    <div class="theme-picker">
+      <p class="muted" style="margin-bottom:6px;">Tipografía</p>
+      <div class="theme-options">
+        <button class="option-btn" data-font="minimal" onclick="setTypography('minimal')">Minimal</button>
+        <button class="option-btn" data-font="serif" onclick="setTypography('serif')">Serif</button>
+        <button class="option-btn" data-font="mono" onclick="setTypography('mono')">Mono</button>
+      </div>
+    </div>
+    <div class="theme-picker">
+      <p class="muted" style="margin-bottom:6px;">Layout</p>
+      <div class="theme-options">
+        <button class="option-btn" data-layout="list" onclick="setLayout('list')">Lista</button>
+        <button class="option-btn" data-layout="grid" onclick="setLayout('grid')">Grid</button>
+      </div>
+    </div>
+    <div class="theme-picker">
+      <p class="muted" style="margin-bottom:6px;">Backups diarios</p>
+      <p id="backup-last" class="muted" style="margin-bottom:6px;">Sin backups todavía.</p>
+      <div class="theme-options backup-actions">
+        <button class="option-btn" onclick="createBackupNow()">Crear ahora</button>
+        <button class="option-btn" onclick="restoreBackup()">Restaurar último</button>
+        <button class="option-btn" onclick="downloadBackup()">Descargar</button>
+      </div>
+      <p id="backup-note" class="note"></p>
+    </div>
+    <p class="muted">Tip: este botón es discreto para no molestar en uso diario.</p>
+  </div>
+  <div id="alias-onboarding" class="hidden">
+    <div class="alias-box">
+      <h3>¿Cómo te quieres llamar?</h3>
+      <p class="muted" style="margin-bottom:10px;">Este alias se verá en el duelo.</p>
+      <input id="onboarding-alias-input" type="text" placeholder="Ej: Joaquim" />
+      <div class="row" style="justify-content:center; margin-top:10px;">
+        <button class="btn-primary" onclick="saveAliasFromOnboarding()">Continuar</button>
+      </div>
+      <p id="onboarding-note" class="note"></p>
+    </div>
+  </div>
+  <div id="sync-reminder"></div>
+  <div id="relation-celebration">
+    <div class="celebration-card">
+      <div class="celebration-hearts">
+        <span class="h1">♥</span>
+        <span class="h2">♥</span>
+        <span class="h3">♥</span>
+        <span class="h4">♥</span>
+      </div>
+      <h4>Qué bonito</h4>
+      <p id="relation-celebration-text"></p>
+    </div>
+  </div>
+  <div id="admin-panel" class="hidden">
+    <div class="admin-card">
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">Panel secreto</h3>
+        <button onclick="closeAdminPanel()">Cerrar</button>
+      </div>
+      <p id="admin-updated" class="muted" style="margin-top:6px;"></p>
+      <div class="admin-grid">
+        <div class="admin-section">
+          <h4>Resumen mensual</h4>
+          <div id="admin-summary" class="admin-body"></div>
+        </div>
+        <div class="admin-section">
+          <h4>Semana a semana</h4>
+          <div id="admin-weekly" class="admin-body"></div>
+        </div>
+        <div class="admin-section">
+          <h4>Patrones</h4>
+          <div id="admin-patterns" class="admin-body"></div>
+        </div>
+        <div class="admin-section">
+          <h4>Heatmap</h4>
+          <div id="admin-heatmap" class="heatmap"></div>
+        </div>
+        <div class="admin-section">
+          <h4>Predicción</h4>
+          <div id="admin-prediction" class="admin-body"></div>
+        </div>
+        <div class="admin-section">
+          <h4>Duelo</h4>
+          <div id="admin-duel" class="admin-body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
